@@ -1,0 +1,72 @@
+flowchart TD
+    Start([App Launch]) --> Welcome{Welcome Screen}
+    
+    %% Authentication Flow
+    Welcome -->|Login| Login[Login Screen]
+    Welcome -->|Register| Register[Registration Screen]
+    Login -->|Forgot| ForgotPw[Forgot Password]
+    ForgotPw -->|Reset| Login
+    
+    %% Registration Flow
+    Register -->|Success| Onboarding
+    
+    %% Onboarding Flow
+    subgraph Onboarding[Onboarding Process]
+        ProfileSetup[Profile Setup] -->|Next| EduBackground[Educational Background]
+        EduBackground -->|Next| CareerPref[Career Preferences]
+    end
+    
+    %% Main Navigation
+    Onboarding -->|Complete| Dashboard[Home Dashboard]
+    Login -->|Success| Dashboard
+    
+    %% Dashboard Hub
+    subgraph MainNav[Main Navigation]
+        Dashboard -->|View Profile| Profile[Profile Screen]
+        Dashboard -->|Career| Career[Career Guidance]
+        Dashboard -->|Goals| Goals[Goals Screen]
+        Dashboard -->|Features| Features[Feature Hub]
+    end
+    
+    %% Feature Sections
+    subgraph Features[Feature Screens]
+        SkillAssess[Skill Assessment]
+        JobBoard[Job Board]
+        Learning[Learning Hub]
+        Network[Networking]
+    end
+    
+    %% Support Sections
+    subgraph Support[Support & Settings]
+        Help[Help Center]
+        Settings[Settings]
+        Notifications[Notifications]
+        Search[Global Search]
+    end
+    
+    %% Feature Connections
+    Dashboard -->|Assessment| SkillAssess
+    Dashboard -->|Jobs| JobBoard
+    Dashboard -->|Learn| Learning
+    Dashboard -->|Network| Network
+    
+    %% Support Connections
+    MainNav -->|Help| Help
+    MainNav -->|Settings| Settings
+    MainNav -->|Notifications| Notifications
+    MainNav -->|Search| Search
+    
+    %% Global Access
+    Search --> MainNav
+    Notifications --> MainNav
+    
+    %% Styling
+    classDef primary fill:#4CAF50,stroke:#333,stroke-width:2px,color:white
+    classDef secondary fill:#2196F3,stroke:#333,stroke-width:2px,color:white
+    classDef feature fill:#FF9800,stroke:#333,stroke-width:2px,color:white
+    classDef support fill:#9C27B0,stroke:#333,stroke-width:2px,color:white
+    
+    class Welcome,Login,Register,ForgotPw primary
+    class Dashboard,Profile,Career,Goals secondary
+    class SkillAssess,JobBoard,Learning,Network feature
+    class Help,Settings,Notifications,Search support
