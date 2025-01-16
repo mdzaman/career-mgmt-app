@@ -1,5 +1,5 @@
 
-# Contributor Covenant Code of Conduct
+# Career Management App Code of Conduct 
 
 ## Our Pledge
 
