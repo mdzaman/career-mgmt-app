@@ -1,7 +1,7 @@
 {
-  "name": "nm-authenticator",
+  "name": "cms-authenticator",
   "version": "1.0.0",
-  "description": " Authenticator for Noble Marriage with TypeScript",
+  "description": " Authenticator for Career management app with TypeScript",
   "main": "lib/src/index.js",
   "types": "lib/src/index.d.ts",
   "scripts": {
