@@ -1,0 +1,132 @@
+{
+  "version": "6.0",
+  "nxVersion": "17.2.8",
+  "deps": {},
+  "pathMappings": {},
+  "nxJsonPlugins": [],
+  "fileMap": {
+    "projectFileMap": {},
+    "nonProjectFiles": [
+      {
+        "file": "Auth/config/config.ts",
+        "hash": "9893671562371090977"
+      },
+      {
+        "file": "Auth/config/default.json",
+        "hash": "17833554848028867632"
+      },
+      {
+        "file": "Auth/package.json",
+        "hash": "3253077689575750152"
+      },
+      {
+        "file": "Auth/src/app.ts",
+        "hash": "136517965277396186"
+      },
+      {
+        "file": "Auth/src/modules/cognito.service.ts",
+        "hash": "5760385378675441565"
+      },
+      {
+        "file": "Auth/src/modules/controller.ts",
+        "hash": "11352937308499643635"
+      },
+      {
+        "file": "Auth/src/modules/middleware.ts",
+        "hash": "3244421341483603138"
+      },
+      {
+        "file": "Auth/src/modules/model.ts",
+        "hash": "3974407885023748569"
+      },
+      {
+        "file": "Auth/src/modules/route.ts",
+        "hash": "3511906347362939427"
+      },
+      {
+        "file": "Auth/src/modules/validators.ts",
+        "hash": "3244421341483603138"
+      },
+      {
+        "file": "Auth/src/server.ts",
+        "hash": "1502921469329573764"
+      },
+      {
+        "file": "Auth/src/types/Payload.ts",
+        "hash": "12543699196462584730"
+      },
+      {
+        "file": "Auth/src/types/Request.ts",
+        "hash": "14974842165075158"
+      },
+      {
+        "file": "Auth/tsconfig.json",
+        "hash": "4357509483769457614"
+      },
+      {
+        "file": "UserManagement/config/config.ts",
+        "hash": "7469383817139191752"
+      },
+      {
+        "file": "UserManagement/config/default.json",
+        "hash": "17833554848028867632"
+      },
+      {
+        "file": "UserManagement/package.json",
+        "hash": "18437854011876943256"
+      },
+      {
+        "file": "UserManagement/src/app.ts",
+        "hash": "10049917591672900751"
+      },
+      {
+        "file": "UserManagement/src/modules/controller.ts",
+        "hash": "10733650561911764901"
+      },
+      {
+        "file": "UserManagement/src/modules/middleware.ts",
+        "hash": "3244421341483603138"
+      },
+      {
+        "file": "UserManagement/src/modules/route.ts",
+        "hash": "16798882369619443438"
+      },
+      {
+        "file": "UserManagement/src/modules/schema.ts",
+        "hash": "14023314292994499205"
+      },
+      {
+        "file": "UserManagement/src/modules/user-management.service.ts",
+        "hash": "8790193448477512983"
+      },
+      {
+        "file": "UserManagement/src/modules/validators.ts",
+        "hash": "4639242519971395919"
+      },
+      {
+        "file": "UserManagement/src/server.ts",
+        "hash": "16389437289354961779"
+      },
+      {
+        "file": "UserManagement/src/types/Payload.ts",
+        "hash": "12543699196462584730"
+      },
+      {
+        "file": "UserManagement/src/types/Request.ts",
+        "hash": "14974842165075158"
+      },
+      {
+        "file": "UserManagement/tsconfig.json",
+        "hash": "4357509483769457614"
+      },
+      {
+        "file": "UserManagement/tsconfig.package.json",
+        "hash": "11879777503161444124"
+      },
+      {
+        "file": "UserManagement/tslint.json",
+        "hash": "8097947434288870852"
+      }
+    ]
+  }
+}
