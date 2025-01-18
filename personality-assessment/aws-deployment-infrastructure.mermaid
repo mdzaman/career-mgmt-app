@@ -1,0 +1,58 @@
+graph TB
+    subgraph "AWS Cloud"
+        subgraph "VPC"
+            subgraph "Public Subnet"
+                ALB["Application Load Balancer"]
+                NAT["NAT Gateway"]
+            end
+            
+            subgraph "Private Subnet 1"
+                ECS1["ECS Fargate\nAssessment Service"]
+                Lambda1["Lambda\nCareer Service"]
+            end
+            
+            subgraph "Private Subnet 2"
+                ECS2["ECS Fargate\nUser Service"]
+                Lambda2["Lambda\nNotification Service"]
+            end
+            
+            subgraph "Database Subnet"
+                RDS["RDS Primary"]
+                RDSStandby["RDS Standby"]
+                ElastiCache["ElastiCache\nRedis Cluster"]
+            end
+        end
+        
+        Route53["Route 53"]
+        CloudFront["CloudFront"]
+        S3["S3 Buckets"]
+        
+        Cognito["Cognito"]
+        APIGW["API Gateway"]
+        
+        SageMaker["SageMaker"]
+    end
+    
+    Internet((Internet)) --> Route53
+    Route53 --> CloudFront
+    CloudFront --> S3
+    CloudFront --> ALB
+    
+    APIGW --> Lambda1
+    APIGW --> Lambda2
+    
+    ALB --> ECS1
+    ALB --> ECS2
+    
+    ECS1 --> RDS
+    ECS2 --> RDS
+    Lambda1 --> RDS
+    Lambda2 --> RDS
+    
+    RDS --> RDSStandby
+    
+    ECS1 --> ElastiCache
+    ECS2 --> ElastiCache
+    
+    Lambda1 --> SageMaker
+    ECS1 --> SageMaker
