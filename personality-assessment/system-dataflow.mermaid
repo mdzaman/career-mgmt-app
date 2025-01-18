@@ -1,0 +1,51 @@
+flowchart TB
+    subgraph Client["Client Layer"]
+        Web["Web App\n(React)"]
+        Mobile["Mobile App\n(Flutter)"]
+        Admin["Admin Dashboard\n(React)"]
+    end
+
+    subgraph Gateway["API Gateway Layer"]
+        AGW["AWS API Gateway"]
+        Auth["Cognito Auth"]
+    end
+
+    subgraph Services["Microservices Layer"]
+        AS["Assessment Service"]
+        CS["Career Service"]
+        US["User Service"]
+        NS["Notification Service"]
+    end
+
+    subgraph Storage["Data Storage Layer"]
+        RDS["RDS\n(PostgreSQL)"]
+        ES["ElastiCache"]
+        S3["S3 Storage"]
+        OS["OpenSearch"]
+    end
+
+    subgraph ML["Machine Learning Layer"]
+        SageMaker["AWS SageMaker"]
+        Comprehend["AWS Comprehend"]
+    end
+
+    Web --> AGW
+    Mobile --> AGW
+    Admin --> AGW
+    
+    AGW --> Auth
+    Auth --> Services
+    
+    AS --> RDS
+    AS --> ES
+    AS --> SageMaker
+    
+    CS --> RDS
+    CS --> OS
+    CS --> SageMaker
+    
+    US --> RDS
+    US --> S3
+    
+    NS --> RDS
+    NS --> Comprehend
