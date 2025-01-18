@@ -2,7 +2,7 @@ This is the microservices architecture for the reward system backend using Pytho
 
 
 
-I've created a complete microservices-based backend for the reward system. Here's a breakdown of the architecture and components:
+Here is a complete microservices-based backend for the reward system. Here's a breakdown of the architecture and components:
 
 1. Microservices Architecture:
 - XP Service:
