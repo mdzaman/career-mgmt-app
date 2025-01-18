@@ -1,0 +1,48 @@
+sequenceDiagram
+    participant U as User
+    participant F as Frontend
+    participant AG as API Gateway
+    participant CS as Career Service
+    participant TS as Training Service
+    participant JS as Job Service
+    participant DB as Database
+    participant ES as External Services
+
+    %% Career Path Selection
+    U->>F: Select Career Path
+    F->>AG: POST /careers/path-selection
+    AG->>CS: Process Selection
+    CS->>DB: Update User Profile
+    DB-->>CS: Confirm Update
+    CS->>TS: Get Training Plans
+    TS-->>CS: Return Plans
+    CS-->>F: Return Career Plan
+    
+    %% Skill Development Tracking
+    U->>F: Update Skill Progress
+    F->>AG: PUT /skills/progress
+    AG->>TS: Update Progress
+    TS->>DB: Store Progress
+    DB-->>TS: Confirm Update
+    TS->>CS: Recalculate Path
+    CS-->>F: Return Updated Plan
+    
+    %% Job Matching
+    U->>F: Search Jobs
+    F->>AG: GET /jobs/search
+    AG->>JS: Process Search
+    JS->>DB: Get User Profile
+    DB-->>JS: Return Profile
+    JS->>ES: Search External Jobs
+    ES-->>JS: Return Matches
+    JS-->>F: Return Job Listings
+    
+    %% Application Tracking
+    U->>F: Submit Application
+    F->>AG: POST /applications/submit
+    AG->>JS: Process Application
+    JS->>DB: Store Application
+    DB-->>JS: Confirm Storage
+    JS->>ES: Submit to External
+    ES-->>JS: Confirm Submission
+    JS-->>F: Return Status
