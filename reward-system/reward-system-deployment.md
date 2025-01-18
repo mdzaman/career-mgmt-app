@@ -1,4 +1,4 @@
-I'll create a microservices architecture for the reward system backend using Python, AWS Lambda, DynamoDB, and API Gateway as specified in the requirements.
+This is the microservices architecture for the reward system backend using Python, AWS Lambda, DynamoDB, and API Gateway as specified in the requirements.
 
 
 
