@@ -1,4 +1,374 @@
-The technical documentation covers:
+# Career Management System Technical Documentation
+
+## System Architecture Overview
+
+### 1. High-Level Architecture
+
+The system follows a cloud-native, microservices-based architecture deployed on AWS, consisting of:
+
+#### 1.1 Frontend Layer
+- **Web Application**: React.js based SPA
+- **Mobile Application**: Flutter-based cross-platform app
+- **Admin Dashboard**: React.js with protected routes
+
+#### 1.2 Backend Layer
+- **API Gateway**: AWS API Gateway
+- **Microservices**: AWS Lambda functions
+- **Authentication**: Amazon Cognito
+- **Business Logic Layer**: Serverless functions
+
+#### 1.3 Data Layer
+- **Primary Database**: Amazon RDS (PostgreSQL)
+- **Cache Layer**: Amazon ElastiCache
+- **File Storage**: Amazon S3
+- **Search Engine**: Amazon OpenSearch
+
+### 2. Detailed Component Architecture
+
+```mermaid
+graph TB
+    Client[Client Applications] --> AGW[API Gateway]
+    AGW --> Auth[Authentication Service]
+    AGW --> AS[Assessment Service]
+    AGW --> CS[Career Service]
+    AGW --> US[User Service]
+    
+    AS --> DB[(Primary Database)]
+    CS --> DB
+    US --> DB
+    
+    AS --> Cache[(Cache Layer)]
+    CS --> Cache
+    
+    CS --> Search[(Search Service)]
+    
+    subgraph Data Storage
+        DB
+        Cache
+        Search
+    end
+```
+
+## Data Flow Architecture
+
+### 1. User Assessment Flow
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant Frontend
+    participant API Gateway
+    participant Assessment Service
+    participant Database
+    
+    User->>Frontend: Start Assessment
+    Frontend->>API Gateway: Request Questions
+    API Gateway->>Assessment Service: Fetch Questions
+    Assessment Service->>Database: Get Questions
+    Database-->>Assessment Service: Questions Data
+    Assessment Service-->>Frontend: Questions Batch
+    
+    User->>Frontend: Submit Answers
+    Frontend->>API Gateway: Submit Response
+    API Gateway->>Assessment Service: Process Answers
+    Assessment Service->>Database: Store Results
+    Assessment Service-->>Frontend: Assessment Results
+```
+
+### 2. Career Recommendation Flow
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant Frontend
+    participant API Gateway
+    participant Career Service
+    participant Database
+    participant ML Service
+    
+    User->>Frontend: View Career Paths
+    Frontend->>API Gateway: Request Recommendations
+    API Gateway->>Career Service: Get Recommendations
+    Career Service->>Database: Fetch User Profile
+    Career Service->>ML Service: Process Profile
+    ML Service-->>Career Service: Recommendations
+    Career Service->>Database: Store Recommendations
+    Career Service-->>Frontend: Career Paths
+```
+
+## Database Schema
+
+### 1. Core Tables
+
+#### 1.1 users
+```sql
+CREATE TABLE users (
+    id UUID PRIMARY KEY,
+    email VARCHAR(255) UNIQUE NOT NULL,
+    full_name VARCHAR(255) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    metadata JSONB
+);
+```
+
+#### 1.2 assessments
+```sql
+CREATE TABLE assessments (
+    id UUID PRIMARY KEY,
+    user_id UUID REFERENCES users(id),
+    test_type VARCHAR(50) NOT NULL,
+    results JSONB,
+    started_at TIMESTAMP,
+    completed_at TIMESTAMP,
+    metadata JSONB
+);
+```
+
+#### 1.3 career_paths
+```sql
+CREATE TABLE career_paths (
+    id UUID PRIMARY KEY,
+    title VARCHAR(255) NOT NULL,
+    description TEXT,
+    requirements JSONB,
+    local_context JSONB,
+    global_context JSONB,
+    metadata JSONB
+);
+```
+
+## API Documentation
+
+### 1. Assessment API
+
+#### 1.1 Start Assessment
+```javascript
+POST /api/v1/assessments/start
+Content-Type: application/json
+
+Request:
+{
+    "user_id": "uuid",
+    "test_type": "MBTI|DISC",
+    "preferences": {
+        "language": "en|bn",
+        "focus_areas": ["tech", "business"]
+    }
+}
+
+Response:
+{
+    "assessment_id": "uuid",
+    "questions": [...],
+    "metadata": {...}
+}
+```
+
+#### 1.2 Submit Answers
+```javascript
+POST /api/v1/assessments/{assessment_id}/submit
+Content-Type: application/json
+
+Request:
+{
+    "answers": [
+        {
+            "question_id": "uuid",
+            "selected_option": "value",
+            "timestamp": "iso8601"
+        }
+    ]
+}
+
+Response:
+{
+    "results": {
+        "personality_type": "INTJ",
+        "scores": {...},
+        "recommendations": [...]
+    }
+}
+```
+
+## Security Implementation
+
+### 1. Authentication Flow
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant Frontend
+    participant Cognito
+    participant API Gateway
+    
+    User->>Frontend: Login Request
+    Frontend->>Cognito: Authenticate
+    Cognito-->>Frontend: JWT Tokens
+    Frontend->>API Gateway: API Request + Token
+    API Gateway->>Cognito: Validate Token
+    Cognito-->>API Gateway: Token Valid
+    API Gateway->>Backend: Authorized Request
+```
+
+### 2. Security Measures
+
+- JWT-based authentication
+- Role-based access control (RBAC)
+- Request rate limiting
+- Input validation
+- SQL injection prevention
+- XSS protection
+- CORS configuration
+
+## Deployment Architecture
+
+### 1. AWS Infrastructure
+
+```mermaid
+graph TB
+    Route53[Route 53] --> CloudFront
+    CloudFront --> S3[S3 Static Website]
+    CloudFront --> ALB[Application Load Balancer]
+    ALB --> ECS[ECS Fargate]
+    ECS --> RDS[(RDS Multi-AZ)]
+    ECS --> Cache[(ElastiCache)]
+```
+
+### 2. CI/CD Pipeline
+
+```mermaid
+graph LR
+    Git[GitHub] --> Build[Build Stage]
+    Build --> Test[Test Stage]
+    Test --> Deploy[Deploy Stage]
+    Deploy --> Prod[Production]
+    Deploy --> Monitor[Monitoring]
+```
+
+## Monitoring and Logging
+
+### 1. Monitoring Stack
+- CloudWatch Metrics
+- CloudWatch Alarms
+- X-Ray Tracing
+- Custom Dashboards
+
+### 2. Logging Strategy
+- Centralized logging with CloudWatch Logs
+- Log retention policies
+- Error tracking
+- Performance monitoring
+
+## Scaling Strategy
+
+### 1. Horizontal Scaling
+- Auto-scaling groups for compute resources
+- Read replicas for database
+- Cache scaling
+
+### 2. Performance Optimization
+- Content delivery network
+- Database query optimization
+- Caching strategy
+- Asset optimization
+
+## Error Handling
+
+### 1. Error Categories
+- Validation errors
+- Business logic errors
+- System errors
+- Network errors
+
+### 2. Error Response Format
+```javascript
+{
+    "error": {
+        "code": "ERROR_CODE",
+        "message": "User-friendly message",
+        "details": {...},
+        "timestamp": "iso8601",
+        "request_id": "uuid"
+    }
+}
+```
+
+## Development Guidelines
+
+### 1. Code Structure
+```
+src/
+├── components/
+│   ├── assessment/
+│   ├── career/
+│   └── common/
+├── services/
+│   ├── api/
+│   ├── auth/
+│   └── utils/
+├── hooks/
+├── contexts/
+└── pages/
+```
+
+### 2. Coding Standards
+- ESLint configuration
+- Prettier setup
+- Git commit conventions
+- Code review guidelines
+
+## API Rate Limiting
+
+### 1. Tier-based Limits
+```javascript
+{
+    "free_tier": {
+        "requests_per_second": 10,
+        "burst": 20
+    },
+    "premium_tier": {
+        "requests_per_second": 50,
+        "burst": 100
+    }
+}
+```
+
+## Data Backup Strategy
+
+### 1. Backup Schedule
+- Daily automated backups
+- Weekly full backups
+- Monthly archival
+- Point-in-time recovery
+
+### 2. Retention Policy
+- 7 days for daily backups
+- 30 days for weekly backups
+- 1 year for monthly archives
+
+## Disaster Recovery Plan
+
+### 1. Recovery Time Objective (RTO)
+- Critical systems: 1 hour
+- Non-critical systems: 4 hours
+
+### 2. Recovery Point Objective (RPO)
+- Database: 5 minutes
+- File storage: 1 hour
+
+## Performance Benchmarks
+
+### 1. Response Time Targets
+- API responses: < 200ms
+- Page load: < 2s
+- Database queries: < 100ms
+
+### 2. Availability Targets
+- System uptime: 99.9%
+- API availability: 99.95%
+- Database availability: 99.99%
+
 
 1. System Architecture:
 - High-level architecture
