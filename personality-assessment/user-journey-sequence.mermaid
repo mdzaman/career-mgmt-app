@@ -1,0 +1,54 @@
+sequenceDiagram
+    participant U as User
+    participant F as Frontend
+    participant AG as API Gateway
+    participant AS as Auth Service
+    participant PS as Profile Service
+    participant TS as Test Service
+    participant CS as Career Service
+    participant DB as Database
+    participant ML as ML Service
+
+    %% User Registration and Initial Assessment
+    U->>F: Register Account
+    F->>AG: POST /auth/register
+    AG->>AS: Create User
+    AS->>DB: Store User Data
+    DB-->>AS: Confirm Storage
+    AS-->>F: Return JWT Token
+    
+    U->>F: Start Assessment
+    F->>AG: POST /assessments/start
+    AG->>TS: Initialize Test
+    TS->>DB: Create Assessment Record
+    DB-->>TS: Confirm Creation
+    TS-->>F: Return Questions Batch
+    
+    U->>F: Submit Answers
+    F->>AG: POST /assessment/responses
+    AG->>TS: Process Responses
+    TS->>ML: Analyze Responses
+    ML->>DB: Store Results
+    DB-->>ML: Confirm Storage
+    ML-->>TS: Return Analysis
+    TS-->>F: Return Results
+    
+    %% Career Recommendations
+    U->>F: View Career Paths
+    F->>AG: GET /careers/recommendations
+    AG->>CS: Get Recommendations
+    CS->>DB: Fetch User Profile
+    DB-->>CS: Return Profile
+    CS->>ML: Generate Recommendations
+    ML-->>CS: Return Matches
+    CS-->>F: Return Career Paths
+    
+    %% Skill Development
+    U->>F: View Skill Path
+    F->>AG: GET /careers/skill-path
+    AG->>CS: Get Skill Requirements
+    CS->>DB: Fetch Current Skills
+    DB-->>CS: Return Skills
+    CS->>ML: Analyze Skill Gaps
+    ML-->>CS: Return Development Path
+    CS-->>F: Return Skill Plan
