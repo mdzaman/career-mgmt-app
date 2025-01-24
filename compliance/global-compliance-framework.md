@@ -2,36 +2,16 @@
 
 ## 1. Compliance Requirements Table
 
-| Category | Requirement | Implementation Check | Validation Method | Required For |
-|----------|-------------|---------------------|-------------------|--------------|
-| Data Privacy | Data Encryption at Rest | - Use AWS KMS for encryption
-- Verify encryption settings on all data stores
-- Check key rotation policies | - AWS Config rules
-- Security Hub checks | GDPR, CCPA |
-| Data Privacy | Data Encryption in Transit | - TLS 1.3 minimum
-- Certificate validation
-- Perfect Forward Secrecy | - SSL Labs test
-- Security Hub | GDPR, CCPA |
-| Access Control | Authentication | - Multi-factor auth
-- Password policies
-- Session management | - IAM policy checks
-- Auth logs review | SOC2, ISO27001 |
-| Access Control | Authorization | - Role-based access
-- Least privilege
-- Regular access reviews | - IAM Access Analyzer
-- Permission boundary checks | SOC2, ISO27001 |
-| Data Retention | Storage Limits | - Define retention periods
-- Implement auto-deletion
-- Backup policies | - S3 lifecycle rules
-- DynamoDB TTL checks | GDPR, CCPA |
-| Audit Logging | Activity Tracking | - CloudTrail enabled
-- CloudWatch Logs
-- API Gateway logs | - Log analysis tools
-- Audit reports | SOC2, HIPAA |
-| Data Processing | Consent Management | - Consent tracking
-- Privacy notices
-- Data processing records | - Consent logs
-- Privacy impact assessments | GDPR, CCPA |
+| **Category**        | **Requirement**               | **Implementation Check**                                                                                 | **Validation Method**                      | **Required For**      |
+|---------------------|-------------------------------|----------------------------------------------------------------------------------------------------------|--------------------------------------------|-----------------------|
+| **Data Privacy**    | Data Encryption at Rest       | - Use AWS KMS for encryption                                                                            | - Verify encryption settings on all data stores  <br> - Check key rotation policies  | GDPR, CCPA |
+|                     | Data Encryption in Transit    | - TLS 1.3 minimum                                                                                       | - SSL Labs test <br> - Security Hub       | GDPR, CCPA |
+| **Access Control**  | Authentication               | - Multi-factor auth <br> - Password policies <br> - Session management                                  | - IAM policy checks <br> - Auth logs review  | SOC2, ISO27001 |
+|                     | Authorization                | - Role-based access <br> - Least privilege <br> - Regular access reviews                               | - IAM Access Analyzer <br> - Permission boundary checks | SOC2, ISO27001 |
+| **Data Retention**  | Storage Limits               | - Define retention periods <br> - Implement auto-deletion <br> - Backup policies                       | - S3 lifecycle rules <br> - DynamoDB TTL checks | GDPR, CCPA |
+| **Audit Logging**   | Activity Tracking            | - CloudTrail enabled <br> - CloudWatch Logs <br> - API Gateway logs                                    | - Log analysis tools <br> - Audit reports  | SOC2, HIPAA |
+| **Data Processing** | Consent Management           | - Consent tracking <br> - Privacy notices <br> - Data processing records                               | - Consent logs <br> - Privacy impact assessments | GDPR, CCPA |
+
 
 ## 2. Compliance Monitoring Dashboard Architecture
 
