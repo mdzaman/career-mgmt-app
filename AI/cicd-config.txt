@@ -1,0 +1,127 @@
+# AWS CodePipeline configuration
+version: 0.2
+
+phases:
+  install:
+    runtime-versions:
+      python: 3.9
+      nodejs: 16
+    commands:
+      - pip install -r requirements.txt
+      - npm install
+
+  pre_build:
+    commands:
+      - echo Running tests
+      - python -m pytest tests/
+      - npm run test
+      
+  build:
+    commands:
+      - echo Building deployment package
+      - sam build
+      - sam package --s3-bucket ${DEPLOYMENT_BUCKET} --output-template-file packaged.yaml
+      
+  post_build:
+    commands:
+      - echo Deploying to ${ENVIRONMENT}
+      - sam deploy --template-file packaged.yaml --stack-name skill-analysis-${ENVIRONMENT} --capabilities CAPABILITY_IAM --parameter-overrides Environment=${ENVIRONMENT}
+
+artifacts:
+  files:
+    - packaged.yaml
+    - templates/*
+    - scripts/*
+
+# CI/CD Pipeline CloudFormation
+Resources:
+  ArtifactBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      VersioningConfiguration:
+        Status: Enabled
+
+  CodeBuildServiceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: codebuild.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AWSCodeBuildAdminAccess
+        - arn:aws:iam::aws:policy/AmazonS3FullAccess
+        - arn:aws:iam::aws:policy/AWSCloudFormationFullAccess
+
+  BuildProject:
+    Type: AWS::CodeBuild::Project
+    Properties:
+      Name: !Sub ${AWS::StackName}-build
+      ServiceRole: !GetAtt CodeBuildServiceRole.Arn
+      Artifacts:
+        Type: CODEPIPELINE
+      Environment:
+        Type: LINUX_CONTAINER
+        ComputeType: BUILD_GENERAL1_SMALL
+        Image: aws/codebuild/amazonlinux2-x86_64-standard:3.0
+      Source:
+        Type: CODEPIPELINE
+        BuildSpec: buildspec.yml
+
+  Pipeline:
+    Type: AWS::CodePipeline::Pipeline
+    Properties:
+      Name: !Sub ${AWS::StackName}-pipeline
+      RoleArn: !GetAtt CodePipelineServiceRole.Arn
+      ArtifactStore:
+        Type: S3
+        Location: !Ref ArtifactBucket
+      Stages:
+        - Name: Source
+          Actions:
+            - Name: Source
+              ActionTypeId:
+                Category: Source
+                Owner: AWS
+                Version: '1'
+                Provider: CodeCommit
+              Configuration:
+                RepositoryName: skill-analysis
+                BranchName: main
+              OutputArtifacts:
+                - Name: SourceCode
+        - Name: Build
+          Actions:
+            - Name: Build
+              ActionTypeId:
+                Category: Build
+                Owner: AWS
+                Version: '1'
+                Provider: CodeBuild
+              Configuration:
+                ProjectName: !Ref BuildProject
+              InputArtifacts:
+                - Name: SourceCode
+              OutputArtifacts:
+                - Name: BuildOutput
+        - Name: Deploy
+          Actions:
+            - Name: Deploy
+              ActionTypeId:
+                Category: Deploy
+                Owner: AWS
+                Version: '1'
+                Provider: CloudFormation
+              Configuration:
+                StackName: !Sub ${AWS::StackName}-${Environment}
+                TemplatePath: BuildOutput::packaged.yaml
+                Capabilities: CAPABILITY_IAM
+                ParameterOverrides: !Sub |
+                  {
+                    "Environment": "${Environment}"
+                  }
+              InputArtifacts:
+                - Name: BuildOutput
