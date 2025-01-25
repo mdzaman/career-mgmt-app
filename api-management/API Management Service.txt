@@ -1,0 +1,238 @@
+import os
+import json
+import boto3
+import uuid
+from datetime import datetime, timedelta
+from typing import Dict, List
+from aws_lambda_powertools import Logger, Tracer
+from aws_lambda_powertools.utilities.typing import LambdaContext
+from aws_lambda_powertools.utilities.data_classes import APIGatewayProxyEvent
+
+logger = Logger()
+tracer = Tracer()
+dynamodb = boto3.resource('dynamodb')
+cloudwatch = boto3.client('cloudwatch')
+
+class APIManagementService:
+    def __init__(self):
+        self.apis_table = dynamodb.Table(os.environ['APIS_TABLE'])
+        self.tokens_table = dynamodb.Table(os.environ['TOKENS_TABLE'])
+        self.metrics_table = dynamodb.Table(os.environ['METRICS_TABLE'])
+
+    @tracer.capture_method
+    def list_apis(self) -> Dict:
+        """List all registered APIs"""
+        try:
+            response = self.apis_table.scan()
+            return {
+                'statusCode': 200,
+                'body': json.dumps(response['Items'])
+            }
+        except Exception as e:
+            logger.exception('Error generating token')
+            return {
+                'statusCode': 500,
+                'body': json.dumps({'error': str(e)})
+            }
+
+    @tracer.capture_method
+    def revoke_token(self, token_id: str) -> Dict:
+        """Revoke an access token"""
+        try:
+            self.tokens_table.update_item(
+                Key={'id': token_id},
+                UpdateExpression='SET #status = :status',
+                ExpressionAttributeNames={'#status': 'status'},
+                ExpressionAttributeValues={':status': 'revoked'}
+            )
+            return {
+                'statusCode': 200,
+                'body': json.dumps({'message': 'Token revoked successfully'})
+            }
+        except Exception as e:
+            logger.exception('Error revoking token')
+            return {
+                'statusCode': 500,
+                'body': json.dumps({'error': str(e)})
+            }
+
+    @tracer.capture_method
+    def get_metrics(self, api_id: str = None, days: int = 7) -> Dict:
+        """Get API usage metrics"""
+        try:
+            end_time = datetime.utcnow()
+            start_time = end_time - timedelta(days=days)
+
+            metrics_params = {
+                'MetricDataQueries': [
+                    {
+                        'Id': 'requests',
+                        'MetricStat': {
+                            'Metric': {
+                                'Namespace': 'APIGateway',
+                                'MetricName': 'Count',
+                                'Dimensions': [
+                                    {'Name': 'ApiId', 'Value': api_id} if api_id else {}
+                                ]
+                            },
+                            'Period': 3600,
+                            'Stat': 'Sum'
+                        }
+                    },
+                    {
+                        'Id': 'latency',
+                        'MetricStat': {
+                            'Metric': {
+                                'Namespace': 'APIGateway',
+                                'MetricName': 'Latency',
+                                'Dimensions': [
+                                    {'Name': 'ApiId', 'Value': api_id} if api_id else {}
+                                ]
+                            },
+                            'Period': 3600,
+                            'Stat': 'Average'
+                        }
+                    }
+                ],
+                'StartTime': start_time,
+                'EndTime': end_time
+            }
+
+            metrics = cloudwatch.get_metric_data(**metrics_params)
+
+            return {
+                'statusCode': 200,
+                'body': json.dumps({
+                    'usage': format_metric_data(metrics['MetricDataResults'][0]),
+                    'performance': format_metric_data(metrics['MetricDataResults'][1])
+                })
+            }
+        except Exception as e:
+            logger.exception('Error getting metrics')
+            return {
+                'statusCode': 500,
+                'body': json.dumps({'error': str(e)})
+            }
+
+    @tracer.capture_method
+    def update_api_config(self, api_id: str, config: Dict) -> Dict:
+        """Update API configuration"""
+        try:
+            update_expr = 'SET config = :config'
+            self.apis_table.update_item(
+                Key={'id': api_id},
+                UpdateExpression=update_expr,
+                ExpressionAttributeValues={':config': config}
+            )
+            return {
+                'statusCode': 200,
+                'body': json.dumps({'message': 'Configuration updated successfully'})
+            }
+        except Exception as e:
+            logger.exception('Error updating API config')
+            return {
+                'statusCode': 500,
+                'body': json.dumps({'error': str(e)})
+            }
+
+def format_metric_data(metric_data: Dict) -> List[Dict]:
+    """Format CloudWatch metric data for frontend consumption"""
+    return [
+        {
+            'timestamp': timestamp.isoformat(),
+            'value': value
+        }
+        for timestamp, value in zip(metric_data['Timestamps'], metric_data['Values'])
+    ]
+
+# Lambda handlers
+@logger.inject_lambda_context
+@tracer.capture_lambda_handler
+def list_apis_handler(event: APIGatewayProxyEvent, context: LambdaContext) -> Dict:
+    service = APIManagementService()
+    return service.list_apis()
+
+@logger.inject_lambda_context
+@tracer.capture_lambda_handler
+def create_api_handler(event: APIGatewayProxyEvent, context: LambdaContext) -> Dict:
+    service = APIManagementService()
+    return service.create_api(json.loads(event['body']))
+
+@logger.inject_lambda_context
+@tracer.capture_lambda_handler
+def generate_token_handler(event: APIGatewayProxyEvent, context: LambdaContext) -> Dict:
+    service = APIManagementService()
+    api_id = json.loads(event['body'])['apiId']
+    return service.generate_token(api_id)('Error listing APIs')
+            return {
+                'statusCode': 500,
+                'body': json.dumps({'error': str(e)})
+            }
+
+    @tracer.capture_method
+    def create_api(self, api_data: Dict) -> Dict:
+        """Register a new API"""
+        try:
+            api_id = str(uuid.uuid4())
+            api_item = {
+                'id': api_id,
+                'name': api_data['name'],
+                'endpoint': api_data['endpoint'],
+                'method': api_data['method'],
+                'status': 'active',
+                'created_at': datetime.utcnow().isoformat(),
+                'config': {
+                    'rateLimit': api_data.get('rateLimit', 1000),
+                    'cacheDuration': api_data.get('cacheDuration', 300),
+                    'timeout': api_data.get('timeout', 30)
+                }
+            }
+
+            self.apis_table.put_item(Item=api_item)
+
+            return {
+                'statusCode': 201,
+                'body': json.dumps({'api_id': api_id})
+            }
+        except Exception as e:
+            logger.exception('Error creating API')
+            return {
+                'statusCode': 500,
+                'body': json.dumps({'error': str(e)})
+            }
+
+    @tracer.capture_method
+    def generate_token(self, api_id: str) -> Dict:
+        """Generate access token for an API"""
+        try:
+            # Verify API exists
+            api = self.apis_table.get_item(Key={'id': api_id})
+            if 'Item' not in api:
+                return {
+                    'statusCode': 404,
+                    'body': json.dumps({'error': 'API not found'})
+                }
+
+            token_id = str(uuid.uuid4())
+            expires = datetime.utcnow() + timedelta(days=30)
+            
+            token_item = {
+                'id': token_id,
+                'api_id': api_id,
+                'apiName': api['Item']['name'],
+                'status': 'active',
+                'created': datetime.utcnow().isoformat(),
+                'expires': expires.isoformat()
+            }
+
+            self.tokens_table.put_item(Item=token_item)
+
+            return {
+                'statusCode': 201,
+                'body': json.dumps({
+                    'token_id': token_id,
+                    'expires': expires.isoformat()
+                })
+            }
+        except Exception as e:
+            logger.exception
